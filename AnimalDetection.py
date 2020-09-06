@@ -21,7 +21,7 @@ Intel_depth_camera.prepare_streams()
 Intel_depth_camera.enable_color_depth()
 detection = DepthProcessing.DepthProcessing(Intel_depth_camera)
 
-Intel_depth_camera.set_laser_power(80)
+Intel_depth_camera.set_laser_power(20)
 
 lastUploaded = time.strftime('%Y%m%d%H%M%S')
 
@@ -36,13 +36,11 @@ def saveImage(image_array):
             path_dir_cropped = 'Data/Cropped/' + str(md) + 'th'
             path_dir_resized = 'Data/Resized/' + str(md) + 'th'
             path_dir_infrared = 'Data/Infrared/' + str(md) + 'th'
-            if os.path.isdir(path_dir_cropped) is False:
-                os.makedirs(path_dir_cropped)
+
             if os.path.isdir(path_dir_resized) is False:
                 os.makedirs(path_dir_resized)
-            if os.path.isdir(path_dir_infrared) is False:
-                os.makedirs(path_dir_infrared)    
-            cv2.imwrite(path_dir_cropped + '/' + str(timestamp) + 'th.' + str(count) + '.png', blob.cropped_object)
+                os.makedirs(path_dir_infrared)
+                    
             cv2.imwrite(path_dir_resized + '/' + str(timestamp) + 'th.' + str(count) + '.png', blob.cr_re_binary)
             if (blob.cr_re_infrared is not None):
                 cv2.imwrite(path_dir_infrared + '/' + str(timestamp) + 'th.' + str(count) + '.png', blob.cr_re_infrared)
@@ -59,7 +57,7 @@ def main():
             color_depth = Intel_depth_camera.get_color_depth()
             processed_vid = detection.motionDetection(raw_depth, width=conf['min_width'], height=conf['min_height'], area=conf['min_area'], min_motion=conf['min_motion_frames'])
             detection.processInfrared(infrared_zero)
-            detection.infraredPredictionHandler()
+            # detection.infraredPredictionHandler()
             
             # print(len(detection.store_blobs))
             saveImage(detection.store_blobs)

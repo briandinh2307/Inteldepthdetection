@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import math
 import IntelCamera
-import PredictionModel
+# import PredictionModel
 
 class Blob:
     """Store all parameters of each individual object"""
@@ -52,7 +52,7 @@ class DepthProcessing:
         
         self.Intel_camera = camera
         self.warmup_frames = 20
-        self.raw_depth_diff = 100           # Threshold between the background and current depth frame
+        self.raw_depth_diff = 300           # Threshold between the background and current depth frame
         self.min_motion_frames = 10         # Number of continuous frames object must appear in the scene
         self.threshold_blobs_area = 1200    # Pixel area
         self.threshold_real_area = 150.0    # Centimeter square
@@ -121,7 +121,8 @@ class DepthProcessing:
                     continue
                 
                 # Calculate the dimension of the object's pixels.
-                dist_to_centroid = self.Intel_camera.get_distance(cX, cY) * 100
+                # dist_to_centroid = self.Intel_camera.get_distance(cX, cY) * 100
+                dist_to_centroid = self.current_frame[cY, cX] * self.Intel_camera.depth_scale * 100
                 cm_per_pixel = (math.tan(self.Intel_camera.depth_ver_FOV/2) \
                                 *2*dist_to_centroid) / 480.0
 
@@ -171,8 +172,9 @@ class DepthProcessing:
         while iteration > 0:
             iteration -= 1      
             blobs_cleaned = self.smallBlobsRemoval(noisy_frame, iteration)
-            
-        return blobs_cleaned  
+
+        binary_frame = cv2.morphologyEx(blobs_cleaned, cv2.MORPH_CLOSE, (7,7))    
+        return binary_frame  
                     
     def min_frame_detection(self):
         """Check if object continiously appear in the frame.
