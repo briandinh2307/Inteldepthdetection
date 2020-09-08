@@ -25,25 +25,46 @@ Intel_depth_camera.set_laser_power(20)
 
 lastUploaded = time.strftime('%Y%m%d%H%M%S')
 
-def saveImage(image_array):
+def saveImage(image_array, raw_infrared=None):
     global lastUploaded
+    flag_raw_infrared = False
+
     timestamp = time.strftime('%Y%m%d%H%M%S')
     if(int(timestamp) - int(lastUploaded) >= 3):
         md = time.strftime('%m%d')
         for count, blob in enumerate(image_array):
             if blob.flag == 0:
                 continue
-            path_dir_cropped = 'Data/Cropped/' + str(md) + 'th'
-            path_dir_resized = 'Data/Resized/' + str(md) + 'th'
-            path_dir_infrared = 'Data/Infrared/' + str(md) + 'th'
 
-            if os.path.isdir(path_dir_resized) is False:
+            path_dir_resized = 'Data/Resized/' + str(md) + 'th'
+            path_dir_resized_2 = 'Data/Resized2/' + str(md) + 'th'
+            path_dir_resized_3 = 'Data/Resized3/' + str(md) + 'th'
+            path_dir_infrared = 'Data/Infrared/' + str(md) + 'th'
+            path_dir_infrared_2 = 'Data/Infrared2/' + str(md) + 'th'
+            path_dir_infrared_3 = 'Data/Infrared3/' + str(md) + 'th'
+            path_dir_origin = 'Data/Origin/' + str(md) + 'th'
+
+            if os.path.isdir(path_dir_resized_2) is False:
                 os.makedirs(path_dir_resized)
+                os.makedirs(path_dir_resized_2)
+                os.makedirs(path_dir_resized_3)
                 os.makedirs(path_dir_infrared)
-                    
+                os.makedirs(path_dir_infrared_2)
+                os.makedirs(path_dir_infrared_3)
+
+            if os.path.isdir(path_dir_origin) is False:
+                os.makedirs(path_dir_origin)
+
             cv2.imwrite(path_dir_resized + '/' + str(timestamp) + 'th.' + str(count) + '.png', blob.cr_re_binary)
+            cv2.imwrite(path_dir_resized_2 + '/' + str(timestamp) + 'th.' + str(count) + '.png', blob.cr_re_binary_2)
+            cv2.imwrite(path_dir_resized_3 + '/' + str(timestamp) + 'th.' + str(count) + '.png', blob.cr_re_binary_3)
+            if raw_infrared is not None and flag_raw_infrared is False:
+                cv2.imwrite(path_dir_origin + '/' + str(timestamp) + 'th.' + str(count) + '.png', raw_infrared)
+                flag_raw_infrared = True
             if (blob.cr_re_infrared is not None):
                 cv2.imwrite(path_dir_infrared + '/' + str(timestamp) + 'th.' + str(count) + '.png', blob.cr_re_infrared)
+                cv2.imwrite(path_dir_infrared_2 + '/' + str(timestamp) + 'th.' + str(count) + '.png', blob.cr_re_infrared_2)
+                cv2.imwrite(path_dir_infrared_3 + '/' + str(timestamp) + 'th.' + str(count) + '.png', blob.cr_re_infrared_3)
             lastUploaded = timestamp
 
 def main():
@@ -60,7 +81,7 @@ def main():
             # detection.infraredPredictionHandler()
             
             # print(len(detection.store_blobs))
-            saveImage(detection.store_blobs)
+            saveImage(detection.store_blobs, raw_infrared = infrared_zero)
             for blob in detection.store_blobs:
                 if blob.flag == 1: 
                     [x, y, w, h] = blob.cnt_parameter

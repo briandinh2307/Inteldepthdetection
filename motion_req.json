@@ -1,6 +1,6 @@
 {
 	"min_motion_frames": 20,
-	"min_width": 15,
-	"min_height": 15,
-	"min_area": 150.0
+	"min_width": 10,
+	"min_height": 10,
+	"min_area": 200.0
 }

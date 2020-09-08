@@ -25,6 +25,10 @@ class Blob:
         self.cropped_object = np.zeros((480, 640), dtype=np.uint8)  # ROI put in the 640x480 window
         self.cr_re_binary = None
         self.cr_re_infrared = None
+        self.cr_re_binary_2 = None
+        self.cr_re_infrared_2 = None
+        self.cr_re_binary_3 = None
+        self.cr_re_infrared_3 = None
 
     def checkBelong(self, new_image):
         """Check if new object appeared in the previous frames"""
@@ -52,7 +56,7 @@ class DepthProcessing:
         
         self.Intel_camera = camera
         self.warmup_frames = 20
-        self.raw_depth_diff = 300           # Threshold between the background and current depth frame
+        self.raw_depth_diff = 150           # Threshold between the background and current depth frame
         self.min_motion_frames = 10         # Number of continuous frames object must appear in the scene
         self.threshold_blobs_area = 1200    # Pixel area
         self.threshold_real_area = 150.0    # Centimeter square
@@ -229,7 +233,12 @@ class DepthProcessing:
         assert type == 'depth' or type == 'infrared', 'Can only resize "depth" or "infrared"'
         image_width = 640
         image_height = 480
-
+        image_width_2 = 640//2
+        image_height_2 = 480//2
+        image_width_3 = 640//4
+        image_height_3 = 480//4
+        result_3 = np.ones((image_height_3, image_width_3), dtype=np.uint8) * 100
+        result_2 = np.ones((image_height_2, image_width_2), dtype=np.uint8) * 100
         for blob in self.store_blobs:
             
             if blob.flag == 1:
@@ -237,21 +246,48 @@ class DepthProcessing:
                     image_to_resize = blob.binary_object
                 elif (type == 'infrared'):
                     image_to_resize = blob.infrared_object
-                scale_percent = blob.distance / 200.0 
+
+                scale_percent = blob.distance / 200.0
+                scale_percent_2 = blob.distance / 400.0
+                scale_percent_3 = blob.distance / 600.0
+
                 resized_width = int(image_to_resize.shape[1] * scale_percent)
                 resized_height = int(image_to_resize.shape[0] * scale_percent)
+                resized_width_2 = int(image_to_resize.shape[1] * scale_percent_2)
+                resized_height_2 = int(image_to_resize.shape[0] * scale_percent_2)
+                resized_width_3 = int(image_to_resize.shape[1] * scale_percent_3)
+                resized_height_3 = int(image_to_resize.shape[0] * scale_percent_3)
+
 
                 if (resized_width < image_width and resized_height < image_height):
                     resized_image = cv2.resize(image_to_resize, (resized_width, resized_height))
                     startx = image_width//2 - resized_width//2
                     starty = image_height//2 - resized_height//2
                     result = np.ones((image_height, image_width), dtype=np.uint8) * 100
-                    result[starty: starty+resized_height, startx: startx+resized_width] = resized_image   
+                    result[starty: starty+resized_height, startx: startx+resized_width] = resized_image
+                    
+                if (resized_width_2 < image_width_2 and resized_height_2 < image_height_2):
+                    resized_image_2 = cv2.resize(image_to_resize, (resized_width_2, resized_height_2))
+                    startx_2 = image_width_2//2 - resized_width_2//2
+                    starty_2 = image_height_2//2 - resized_height_2//2
+                    result_2 = np.ones((image_height_2, image_width_2), dtype=np.uint8) * 100
+                    result_2[starty_2: starty_2+resized_height_2, startx_2: startx_2+resized_width_2] = resized_image_2
+
+                if (resized_width_3 < image_width_3 and resized_height_3 < image_height_3):
+                    resized_image_3 = cv2.resize(image_to_resize, (resized_width_3, resized_height_3))
+                    startx_3 = image_width_3//2 - resized_width_3//2
+                    starty_3 = image_height_3//2 - resized_height_3//2
+                    result_3 = np.ones((image_height_3, image_width_3), dtype=np.uint8) * 100
+                    result_3[starty_3: starty_3+resized_height_3, startx_3: startx_3+resized_width_3] = resized_image_3        
         
                 if (type == 'depth'):
                     blob.cr_re_binary = result
+                    blob.cr_re_binary_2 = result_2
+                    blob.cr_re_binary_3 = result_3
                 elif (type == 'infrared'):
                     blob.cr_re_infrared = result
+                    blob.cr_re_infrared_2 = result_2
+                    blob.cr_re_infrared_3 = result_3
 
     def depthResizingHandler(self):
         self.objectResizing(type = 'depth')
